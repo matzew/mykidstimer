@@ -86,8 +86,8 @@
 
       card.innerHTML = `
         <div class="task-name">${escapeHtml(task.name)}</div>
-        <div class="task-duration">${task.duration} Min</div>
-        <button class="task-delete" title="Löschen">&times;</button>
+        <div class="task-duration">${task.duration} ${I18n.t('task.minutes')}</div>
+        <button class="task-delete" title="${I18n.t('task.delete')}">&times;</button>
       `;
 
       // Select task
@@ -167,10 +167,10 @@
   function pauseTimer() {
     if (timer.paused) {
       timer.resume();
-      dom.btnPause.textContent = 'Pause';
+      dom.btnPause.textContent = I18n.t('btn.pause');
     } else {
       timer.pause();
-      dom.btnPause.textContent = 'Weiter';
+      dom.btnPause.textContent = I18n.t('btn.resume');
     }
   }
 
@@ -182,7 +182,7 @@
     dom.btnStart.hidden = false;
     dom.btnPause.hidden = true;
     dom.btnStop.hidden = true;
-    dom.btnPause.textContent = 'Pause';
+    dom.btnPause.textContent = I18n.t('btn.pause');
 
     dom.btnStart.disabled = false;
   }
@@ -200,7 +200,7 @@
     dom.btnStart.hidden = false;
     dom.btnPause.hidden = true;
     dom.btnStop.hidden = true;
-    dom.btnPause.textContent = 'Pause';
+    dom.btnPause.textContent = I18n.t('btn.pause');
     dom.btnStart.disabled = true;
 
     saveTasks();
@@ -259,12 +259,12 @@
 
     if (editIndex >= 0) {
       const task = state.tasks[editIndex];
-      dom.modalTitle.textContent = 'Aufgabe bearbeiten';
+      dom.modalTitle.textContent = I18n.t('modal.editTask');
       dom.taskName.value = task.name;
       dom.taskDuration.value = task.duration;
       selectedColor = task.color;
     } else {
-      dom.modalTitle.textContent = 'Neue Aufgabe';
+      dom.modalTitle.textContent = I18n.t('modal.newTask');
       dom.taskName.value = '';
       dom.taskDuration.value = 15;
       selectedColor = '#4A90D9';
@@ -377,9 +377,11 @@
   });
 
   // === Init ===
-  loadTasks();
-  loadMascot();
-  renderTasks();
-  updateButtonStates();
-  mainLoop();
+  I18n.init().then(() => {
+    loadTasks();
+    loadMascot();
+    renderTasks();
+    updateButtonStates();
+    mainLoop();
+  });
 })();

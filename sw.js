@@ -1,11 +1,14 @@
-const CACHE_NAME = 'kidstimer-v2';
+const CACHE_NAME = 'kidstimer-v3';
 const ASSETS = [
   '/mykidstimer/',
   '/mykidstimer/index.html',
   '/mykidstimer/css/style.css',
+  '/mykidstimer/js/i18n.js',
   '/mykidstimer/js/app.js',
   '/mykidstimer/js/clock.js',
   '/mykidstimer/js/timer.js',
+  '/mykidstimer/lang/de.json',
+  '/mykidstimer/lang/en.json',
   '/mykidstimer/assets/mascot.svg',
   '/mykidstimer/icons/icon-192.png',
   '/mykidstimer/icons/icon-512.png',

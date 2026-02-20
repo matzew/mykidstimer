@@ -25,11 +25,11 @@
         </div>
         <div class="timer-container" id="timer-container">
           <div class="timer-display" id="timer-display">00:00</div>
-          <div class="timer-label">verbleibend</div>
+          <div class="timer-label" data-i18n="timer.remaining">verbleibend</div>
           <div class="timer-controls">
-            <button id="btn-start" class="btn btn-start" disabled>Start</button>
-            <button id="btn-pause" class="btn btn-pause" hidden>Pause</button>
-            <button id="btn-stop" class="btn btn-stop" hidden>Stop</button>
+            <button id="btn-start" class="btn btn-start" disabled data-i18n="btn.start">Start</button>
+            <button id="btn-pause" class="btn btn-pause" hidden data-i18n="btn.pause">Pause</button>
+            <button id="btn-stop" class="btn btn-stop" hidden data-i18n="btn.stop">Stop</button>
           </div>
         </div>
       </div>
@@ -40,8 +40,8 @@
         </div>
         <div class="tasks-section">
           <div class="tasks-header">
-            <h2>Aufgaben</h2>
-            <button id="btn-add-task" class="btn btn-add">+ Neu</button>
+            <h2 data-i18n="tasks.title">Aufgaben</h2>
+            <button id="btn-add-task" class="btn btn-add" data-i18n="tasks.add">+ Neu</button>
           </div>
           <div class="tasks-list" id="tasks-list">
             <!-- Tasks will be rendered here -->
@@ -53,34 +53,35 @@
     <!-- Modal for adding/editing tasks -->
     <div class="modal-overlay" id="modal-overlay" hidden>
       <div class="modal">
-        <h3 id="modal-title">Neue Aufgabe</h3>
+        <h3 id="modal-title" data-i18n="modal.newTask">Neue Aufgabe</h3>
         <div class="form-group">
-          <label for="task-name">Name</label>
-          <input type="text" id="task-name" placeholder="z.B. Hausaufgaben" maxlength="30">
+          <label for="task-name" data-i18n="modal.name">Name</label>
+          <input type="text" id="task-name" data-i18n-placeholder="modal.namePlaceholder" placeholder="z.B. Hausaufgaben" maxlength="30">
         </div>
         <div class="form-group">
-          <label for="task-duration">Dauer (Minuten)</label>
+          <label for="task-duration" data-i18n="modal.duration">Dauer (Minuten)</label>
           <input type="number" id="task-duration" min="1" max="120" value="15">
         </div>
         <div class="form-group">
-          <label>Farbe</label>
+          <label data-i18n="modal.color">Farbe</label>
           <div class="color-picker" id="color-picker">
-            <button class="color-swatch" data-color="#4A90D9" style="background:#4A90D9" title="Blau"></button>
-            <button class="color-swatch" data-color="#F5A623" style="background:#F5A623" title="Orange"></button>
-            <button class="color-swatch" data-color="#7ED321" style="background:#7ED321" title="Grün"></button>
-            <button class="color-swatch" data-color="#BD10E0" style="background:#BD10E0" title="Lila"></button>
-            <button class="color-swatch" data-color="#E91E8A" style="background:#E91E8A" title="Rosa"></button>
-            <button class="color-swatch" data-color="#F8E71C" style="background:#F8E71C" title="Gelb"></button>
+            <button class="color-swatch" data-color="#4A90D9" style="background:#4A90D9" data-i18n-title="color.blue" title="Blau"></button>
+            <button class="color-swatch" data-color="#F5A623" style="background:#F5A623" data-i18n-title="color.orange" title="Orange"></button>
+            <button class="color-swatch" data-color="#7ED321" style="background:#7ED321" data-i18n-title="color.green" title="Grün"></button>
+            <button class="color-swatch" data-color="#BD10E0" style="background:#BD10E0" data-i18n-title="color.purple" title="Lila"></button>
+            <button class="color-swatch" data-color="#E91E8A" style="background:#E91E8A" data-i18n-title="color.pink" title="Rosa"></button>
+            <button class="color-swatch" data-color="#F8E71C" style="background:#F8E71C" data-i18n-title="color.yellow" title="Gelb"></button>
           </div>
         </div>
         <div class="modal-buttons">
-          <button id="btn-modal-cancel" class="btn btn-cancel">Abbrechen</button>
-          <button id="btn-modal-save" class="btn btn-save">Speichern</button>
+          <button id="btn-modal-cancel" class="btn btn-cancel" data-i18n="btn.cancel">Abbrechen</button>
+          <button id="btn-modal-save" class="btn btn-save" data-i18n="btn.save">Speichern</button>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/clock.js"></script>
   <script src="js/timer.js"></script>
   <script src="js/app.js"></script>
