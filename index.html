@@ -41,6 +41,11 @@
         <div class="tasks-section">
           <div class="tasks-header">
             <h2 data-i18n="tasks.title">Aufgaben</h2>
+            <label class="autoplay-toggle">
+              <input type="checkbox" id="autoplay-checkbox">
+              <span class="autoplay-slider"></span>
+              <span class="autoplay-label" data-i18n="autoplay.label">Durchlauf</span>
+            </label>
             <button id="btn-add-task" class="btn btn-add" data-i18n="tasks.add">+ Neu</button>
           </div>
           <div class="tasks-list" id="tasks-list">
@@ -75,6 +80,7 @@
         </div>
         <div class="modal-buttons">
           <button id="btn-modal-cancel" class="btn btn-cancel" data-i18n="btn.cancel">Abbrechen</button>
+          <button id="btn-modal-save-add" class="btn btn-save-add" hidden data-i18n="btn.saveAndNew">Speichern & Neu</button>
           <button id="btn-modal-save" class="btn btn-save" data-i18n="btn.save">Speichern</button>
         </div>
       </div>

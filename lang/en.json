@@ -21,5 +21,7 @@
   "color.pink": "Pink",
   "color.yellow": "Yellow",
   "btn.cancel": "Cancel",
-  "btn.save": "Save"
+  "btn.save": "Save",
+  "btn.saveAndNew": "Save & New",
+  "autoplay.label": "Auto-play"
 }

@@ -21,5 +21,7 @@
   "color.pink": "Rosa",
   "color.yellow": "Gelb",
   "btn.cancel": "Abbrechen",
-  "btn.save": "Speichern"
+  "btn.save": "Speichern",
+  "btn.saveAndNew": "Speichern & Neu",
+  "autoplay.label": "Durchlauf"
 }

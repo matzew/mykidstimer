@@ -5,7 +5,7 @@ class AnalogClock {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
-    this.overlay = null; // { startAngle, endAngle, color }
+    this.overlays = []; // Array of { startTime, endTime, color }
     this.dpr = window.devicePixelRatio || 1;
     this._setupHiDPI();
 
@@ -28,17 +28,15 @@ class AnalogClock {
   }
 
   /**
-   * Set the overlay wedge for the current task.
-   * @param {Date} startTime - When the task started
-   * @param {Date} endTime - When the task ends
-   * @param {string} color - CSS color for the overlay
+   * Set overlay wedges for all running tasks.
+   * @param {Array<{startTime: Date, endTime: Date, color: string}>} overlays
    */
-  setOverlay(startTime, endTime, color) {
-    this.overlay = { startTime, endTime, color };
+  setOverlays(overlays) {
+    this.overlays = overlays;
   }
 
-  clearOverlay() {
-    this.overlay = null;
+  clearOverlays() {
+    this.overlays = [];
   }
 
   /**
@@ -123,38 +121,35 @@ class AnalogClock {
     return ((minutes + seconds / 60) / 60) * Math.PI * 2 - Math.PI / 2;
   }
 
-  _drawOverlay(now) {
-    if (!this.overlay) return;
+  _drawOverlays(now) {
+    if (this.overlays.length === 0) return;
 
     const ctx = this.ctx;
     const cx = this.center;
     const cy = this.center;
     const r = this.radius - 22;
 
-    const { startTime, endTime, color } = this.overlay;
+    for (const { startTime, endTime, color } of this.overlays) {
+      if (now >= endTime) continue;
 
-    // Only draw if there's still time left
-    if (now >= endTime) return;
+      const currentAngle = this._timeToMinuteAngle(now);
+      const remainingMs = endTime.getTime() - now.getTime();
+      const remainingMinutes = remainingMs / 60000;
+      const sweepAngle = (remainingMinutes / 60) * Math.PI * 2;
+      const endAngle = currentAngle + sweepAngle;
 
-    // Use minute-hand scale: 60 min = full circle
-    // This way a 15-min task covers a quarter of the clock
-    const currentAngle = this._timeToMinuteAngle(now);
-    const remainingMs = endTime.getTime() - now.getTime();
-    const remainingMinutes = remainingMs / 60000;
-    const sweepAngle = (remainingMinutes / 60) * Math.PI * 2;
-    const endAngle = currentAngle + sweepAngle;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, currentAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = color + '40'; // 25% opacity
-    ctx.fill();
-    ctx.strokeStyle = color + '80';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, currentAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = color + '40';
+      ctx.fill();
+      ctx.strokeStyle = color + '80';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   _drawHands(now) {
@@ -206,7 +201,7 @@ class AnalogClock {
     ctx.clearRect(0, 0, this.size, this.size);
 
     this._drawFace();
-    this._drawOverlay(now);
+    this._drawOverlays(now);
     this._drawHands(now);
   }
 }

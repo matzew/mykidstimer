@@ -154,6 +154,11 @@ body {
   color: white;
 }
 
+.btn-save-add {
+  background: var(--active-color);
+  color: white;
+}
+
 /* === Bottom Section === */
 .bottom-section {
   display: flex;
@@ -280,6 +285,22 @@ body {
   text-decoration: line-through;
 }
 
+.task-card.running {
+  animation: running-pulse 2s ease-in-out infinite;
+}
+
+@keyframes running-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+  50% { box-shadow: 0 0 0 4px currentColor; }
+}
+
+.task-card .task-countdown {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
 /* === Modal === */
 .modal-overlay {
   position: fixed;
@@ -364,6 +385,68 @@ body {
   gap: 10px;
   justify-content: flex-end;
   margin-top: 20px;
+}
+
+/* === Autoplay Toggle === */
+.autoplay-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.autoplay-toggle input {
+  display: none;
+}
+
+.autoplay-slider {
+  width: 40px;
+  height: 22px;
+  background: #cbd5e0;
+  border-radius: 11px;
+  position: relative;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.autoplay-slider::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.autoplay-toggle input:checked + .autoplay-slider {
+  background: #2f855a;
+}
+
+.autoplay-toggle input:checked + .autoplay-slider::after {
+  transform: translateX(18px);
+}
+
+.autoplay-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* === Countdown Animation === */
+@keyframes countdown-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.7; }
+}
+
+.timer-display.countdown-active {
+  animation: countdown-pulse 1s ease-in-out infinite;
 }
 
 /* === Responsive === */

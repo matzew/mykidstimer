@@ -9,6 +9,9 @@
     tasks: [],
     activeTaskIndex: -1,
     editingTaskIndex: -1,
+    autoplay: false,
+    autoplayCountdownId: null,
+    runningTimers: new Map(), // taskIndex → CountdownTimer
   };
 
   // === DOM Elements ===
@@ -27,12 +30,13 @@
     colorPicker: document.getElementById('color-picker'),
     btnModalCancel: document.getElementById('btn-modal-cancel'),
     btnModalSave: document.getElementById('btn-modal-save'),
+    btnModalSaveAdd: document.getElementById('btn-modal-save-add'),
+    autoplayCheckbox: document.getElementById('autoplay-checkbox'),
     mascotContainer: document.getElementById('mascot-container'),
   };
 
   // === Instances ===
   const clock = new AnalogClock('analog-clock');
-  const timer = new CountdownTimer();
 
   let selectedColor = '#4A90D9';
 
@@ -50,6 +54,47 @@
     } catch (e) {
       state.tasks = [];
     }
+  }
+
+  // === Autoplay ===
+  function saveAutoplay() {
+    localStorage.setItem('kidstimer-autoplay', JSON.stringify(state.autoplay));
+  }
+
+  function loadAutoplay() {
+    try {
+      const saved = localStorage.getItem('kidstimer-autoplay');
+      if (saved !== null) {
+        state.autoplay = JSON.parse(saved);
+      }
+    } catch (e) {
+      state.autoplay = false;
+    }
+    dom.autoplayCheckbox.checked = state.autoplay;
+  }
+
+  function startAutoplayCountdown() {
+    let count = 3;
+    dom.timerDisplay.textContent = count + '...';
+    dom.timerDisplay.classList.add('countdown-active');
+
+    state.autoplayCountdownId = setInterval(() => {
+      count--;
+      if (count > 0) {
+        dom.timerDisplay.textContent = count + '...';
+      } else {
+        cancelAutoplayCountdown();
+        startTimer();
+      }
+    }, 1000);
+  }
+
+  function cancelAutoplayCountdown() {
+    if (state.autoplayCountdownId !== null) {
+      clearInterval(state.autoplayCountdownId);
+      state.autoplayCountdownId = null;
+    }
+    dom.timerDisplay.classList.remove('countdown-active');
   }
 
   // === Mascot ===
@@ -82,18 +127,25 @@
       if (task.completed) {
         card.classList.add('completed');
       }
+      if (state.runningTimers.has(index)) {
+        card.classList.add('running');
+      }
       card.style.borderColor = task.color;
+
+      const countdownHtml = state.runningTimers.has(index)
+        ? `<div class="task-countdown" data-timer-index="${index}"></div>`
+        : '';
 
       card.innerHTML = `
         <div class="task-name">${escapeHtml(task.name)}</div>
         <div class="task-duration">${task.duration} ${I18n.t('task.minutes')}</div>
+        ${countdownHtml}
         <button class="task-delete" title="${I18n.t('task.delete')}">&times;</button>
       `;
 
-      // Select task
+      // Select task (allowed even while other timers run)
       card.addEventListener('click', (e) => {
         if (e.target.classList.contains('task-delete')) return;
-        if (timer.running) return; // Don't switch while running
         selectTask(index);
       });
 
@@ -121,20 +173,52 @@
     // Update timer border color
     dom.timerContainer.style.borderColor = task.color;
 
-    // Enable start button
-    dom.btnStart.disabled = task.completed;
+    // Update button states for selected task
+    const isRunning = state.runningTimers.has(index);
+    dom.btnStart.hidden = isRunning;
+    dom.btnPause.hidden = !isRunning;
+    dom.btnStop.hidden = !isRunning;
+    dom.btnStart.disabled = task.completed || isRunning;
+
+    if (isRunning) {
+      const tmr = state.runningTimers.get(index);
+      dom.btnPause.textContent = tmr.paused ? I18n.t('btn.resume') : I18n.t('btn.pause');
+    } else {
+      dom.btnPause.textContent = I18n.t('btn.pause');
+    }
+
+    // Update main display for selected task
+    if (isRunning) {
+      const tmr = state.runningTimers.get(index);
+      const remaining = tmr.paused ? tmr.pausedRemaining : tmr.endTime.getTime() - Date.now();
+      updateTimerUI(Math.max(0, remaining));
+    } else {
+      updateTimerUI(-1);
+    }
 
     renderTasks();
   }
 
   function deleteTask(index) {
-    if (timer.running && index === state.activeTaskIndex) {
-      timer.stop();
-      clock.clearOverlay();
-      updateTimerUI(-1);
+    // Stop the timer for this task if running
+    if (state.runningTimers.has(index)) {
+      state.runningTimers.get(index).stop();
+      state.runningTimers.delete(index);
     }
 
     state.tasks.splice(index, 1);
+
+    // Re-key running timers: shift indices above the deleted one
+    const newTimers = new Map();
+    for (const [idx, tmr] of state.runningTimers) {
+      if (idx > index) {
+        tmr._taskIndex = idx - 1;
+        newTimers.set(idx - 1, tmr);
+      } else {
+        newTimers.set(idx, tmr);
+      }
+    }
+    state.runningTimers = newTimers;
 
     if (state.activeTaskIndex >= state.tasks.length) {
       state.activeTaskIndex = state.tasks.length - 1;
@@ -155,28 +239,46 @@
     if (state.activeTaskIndex < 0) return;
     const task = state.tasks[state.activeTaskIndex];
     if (task.completed) return;
+    if (state.runningTimers.has(state.activeTaskIndex)) return;
 
-    timer.start(task.duration);
-    clock.setOverlay(new Date(), timer.getEndTime(), task.color);
+    const tmr = new CountdownTimer();
+    tmr.onTick = (remaining) => {
+      // Only update main display if this is the focused task
+      if (state.activeTaskIndex === tmr._taskIndex) {
+        updateTimerUI(remaining);
+      }
+    };
+    tmr._taskIndex = state.activeTaskIndex;
+    tmr.start(task.duration);
+    state.runningTimers.set(state.activeTaskIndex, tmr);
 
     dom.btnStart.hidden = true;
     dom.btnPause.hidden = false;
     dom.btnStop.hidden = false;
+
+    renderTasks();
   }
 
   function pauseTimer() {
-    if (timer.paused) {
-      timer.resume();
+    const tmr = state.runningTimers.get(state.activeTaskIndex);
+    if (!tmr) return;
+
+    if (tmr.paused) {
+      tmr.resume();
       dom.btnPause.textContent = I18n.t('btn.pause');
     } else {
-      timer.pause();
+      tmr.pause();
       dom.btnPause.textContent = I18n.t('btn.resume');
     }
   }
 
   function stopTimer() {
-    timer.stop();
-    clock.clearOverlay();
+    cancelAutoplayCountdown();
+    const tmr = state.runningTimers.get(state.activeTaskIndex);
+    if (tmr) {
+      tmr.stop();
+      state.runningTimers.delete(state.activeTaskIndex);
+    }
     updateTimerUI(-1);
 
     dom.btnStart.hidden = false;
@@ -185,31 +287,43 @@
     dom.btnPause.textContent = I18n.t('btn.pause');
 
     dom.btnStart.disabled = false;
+
+    renderTasks();
   }
 
-  function onTimerFinish() {
-    const task = state.tasks[state.activeTaskIndex];
+  function onTimerFinish(taskIndex) {
+    state.runningTimers.delete(taskIndex);
+
+    const task = state.tasks[taskIndex];
     if (task) {
       task.completed = true;
     }
 
-    clock.clearOverlay();
     mascotCelebrate();
     playFinishSound();
 
-    dom.btnStart.hidden = false;
-    dom.btnPause.hidden = true;
-    dom.btnStop.hidden = true;
-    dom.btnPause.textContent = I18n.t('btn.pause');
-    dom.btnStart.disabled = true;
+    // Update buttons if the finished task is the currently selected one
+    if (taskIndex === state.activeTaskIndex) {
+      dom.btnStart.hidden = false;
+      dom.btnPause.hidden = true;
+      dom.btnStop.hidden = true;
+      dom.btnPause.textContent = I18n.t('btn.pause');
+      dom.btnStart.disabled = true;
+      updateTimerUI(-1);
+    }
 
     saveTasks();
     renderTasks();
 
-    // Auto-select next incomplete task
-    const nextIndex = state.tasks.findIndex((t, i) => i > state.activeTaskIndex && !t.completed);
-    if (nextIndex >= 0) {
-      selectTask(nextIndex);
+    // Auto-select next incomplete task (only if finished task was selected)
+    if (taskIndex === state.activeTaskIndex) {
+      const nextIndex = state.tasks.findIndex((t, i) => i > taskIndex && !t.completed);
+      if (nextIndex >= 0) {
+        selectTask(nextIndex);
+        if (state.autoplay) {
+          startAutoplayCountdown();
+        }
+      }
     }
   }
 
@@ -246,9 +360,14 @@
   function updateButtonStates() {
     const hasActiveTask = state.activeTaskIndex >= 0;
     const activeTask = hasActiveTask ? state.tasks[state.activeTaskIndex] : null;
-    dom.btnStart.disabled = !hasActiveTask || (activeTask && activeTask.completed);
+    const isRunning = hasActiveTask && state.runningTimers.has(state.activeTaskIndex);
 
-    if (!timer.running) {
+    dom.btnStart.disabled = !hasActiveTask || (activeTask && activeTask.completed) || isRunning;
+    dom.btnStart.hidden = isRunning;
+    dom.btnPause.hidden = !isRunning;
+    dom.btnStop.hidden = !isRunning;
+
+    if (!isRunning) {
       dom.timerContainer.style.borderColor = activeTask ? activeTask.color : '#e2e8f0';
     }
   }
@@ -271,6 +390,7 @@
     }
 
     updateColorSelection();
+    dom.btnModalSaveAdd.hidden = (editIndex >= 0);
     dom.modalOverlay.hidden = false;
     dom.taskName.focus();
   }
@@ -317,6 +437,44 @@
     updateButtonStates();
   }
 
+  function saveAndAddAnother() {
+    const name = dom.taskName.value.trim();
+    const duration = parseInt(dom.taskDuration.value, 10);
+
+    if (!name) {
+      dom.taskName.focus();
+      return;
+    }
+    if (!duration || duration < 1) {
+      dom.taskDuration.focus();
+      return;
+    }
+
+    state.tasks.push({
+      name,
+      duration,
+      color: selectedColor,
+      completed: false,
+    });
+
+    saveTasks();
+    renderTasks();
+
+    // Auto-select if it's the first task
+    if (state.tasks.length === 1) {
+      selectTask(0);
+    }
+
+    updateButtonStates();
+
+    // Reset form for next task
+    dom.taskName.value = '';
+    dom.taskDuration.value = 15;
+    selectedColor = '#4A90D9';
+    updateColorSelection();
+    dom.taskName.focus();
+  }
+
   function updateColorSelection() {
     dom.colorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
       swatch.classList.toggle('selected', swatch.dataset.color === selectedColor);
@@ -326,28 +484,37 @@
   // === Main Loop ===
   function mainLoop() {
     const now = new Date();
+    const overlays = [];
+    const finishedTasks = [];
 
-    // Update timer
-    if (timer.running) {
-      const remaining = timer.tick();
+    for (const [taskIndex, tmr] of state.runningTimers) {
+      const remaining = tmr.tick();
       if (remaining === 0) {
-        onTimerFinish();
-      }
-
-      // Update clock overlay to shrink from current time
-      if (timer.running) {
-        clock.setOverlay(now, timer.getEndTime(), state.tasks[state.activeTaskIndex].color);
+        finishedTasks.push(taskIndex);
+      } else if (remaining > 0) {
+        overlays.push({
+          startTime: now,
+          endTime: tmr.getEndTime(),
+          color: state.tasks[taskIndex].color,
+        });
       }
     }
 
-    // Render clock
-    clock.render(now);
+    finishedTasks.forEach(idx => onTimerFinish(idx));
+    clock.setOverlays(overlays);
 
+    // Update mini-countdowns on task cards
+    for (const [taskIndex, tmr] of state.runningTimers) {
+      const el = document.querySelector(`.task-countdown[data-timer-index="${taskIndex}"]`);
+      if (el) {
+        const rem = tmr.paused ? tmr.pausedRemaining : Math.max(0, tmr.endTime.getTime() - Date.now());
+        el.textContent = CountdownTimer.formatTime(rem);
+      }
+    }
+
+    clock.render(now);
     requestAnimationFrame(mainLoop);
   }
-
-  // === Timer Callbacks ===
-  timer.onTick = updateTimerUI;
 
   // === Event Listeners ===
   dom.btnStart.addEventListener('click', startTimer);
@@ -356,6 +523,15 @@
   dom.btnAddTask.addEventListener('click', () => openModal(-1));
   dom.btnModalCancel.addEventListener('click', closeModal);
   dom.btnModalSave.addEventListener('click', saveModal);
+  dom.btnModalSaveAdd.addEventListener('click', saveAndAddAnother);
+
+  dom.autoplayCheckbox.addEventListener('change', () => {
+    state.autoplay = dom.autoplayCheckbox.checked;
+    saveAutoplay();
+    if (!state.autoplay) {
+      cancelAutoplayCountdown();
+    }
+  });
 
   dom.modalOverlay.addEventListener('click', (e) => {
     if (e.target === dom.modalOverlay) closeModal();
@@ -379,6 +555,7 @@
   // === Init ===
   I18n.init().then(() => {
     loadTasks();
+    loadAutoplay();
     loadMascot();
     renderTasks();
     updateButtonStates();
