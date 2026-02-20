@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kidstimer-v1';
+const CACHE_NAME = 'kidstimer-v2';
 const ASSETS = [
   '/mykidstimer/',
   '/mykidstimer/index.html',
