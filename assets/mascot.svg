@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="ticki">
+  <!-- Body -->
+  <ellipse cx="60" cy="75" rx="38" ry="35" fill="#8B6914" opacity="0.9"/>
+  <!-- Belly -->
+  <ellipse cx="60" cy="80" rx="26" ry="24" fill="#F5DEB3"/>
+
+  <!-- Head -->
+  <circle cx="60" cy="40" r="30" fill="#A0782C"/>
+
+  <!-- Ears -->
+  <polygon points="35,20 28,2 45,15" fill="#A0782C"/>
+  <polygon points="85,20 92,2 75,15" fill="#A0782C"/>
+  <polygon points="37,18 32,6 45,15" fill="#F5DEB3"/>
+  <polygon points="83,18 88,6 75,15" fill="#F5DEB3"/>
+
+  <!-- Eyes -->
+  <g class="mascot-eye">
+    <circle cx="47" cy="38" r="8" fill="white"/>
+    <circle cx="49" cy="37" r="4.5" fill="#2d3748"/>
+    <circle cx="50.5" cy="35.5" r="1.5" fill="white"/>
+  </g>
+  <g class="mascot-eye">
+    <circle cx="73" cy="38" r="8" fill="white"/>
+    <circle cx="75" cy="37" r="4.5" fill="#2d3748"/>
+    <circle cx="76.5" cy="35.5" r="1.5" fill="white"/>
+  </g>
+
+  <!-- Nose -->
+  <ellipse cx="60" cy="46" rx="4" ry="3" fill="#5D4E37"/>
+
+  <!-- Mouth (smile) -->
+  <path d="M52 51 Q60 58 68 51" fill="none" stroke="#5D4E37" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Whiskers -->
+  <line x1="30" y1="44" x2="44" y2="46" stroke="#A0782C" stroke-width="1.2"/>
+  <line x1="30" y1="48" x2="44" y2="48" stroke="#A0782C" stroke-width="1.2"/>
+  <line x1="76" y1="46" x2="90" y2="44" stroke="#A0782C" stroke-width="1.2"/>
+  <line x1="76" y1="48" x2="90" y2="48" stroke="#A0782C" stroke-width="1.2"/>
+
+  <!-- Paws -->
+  <ellipse cx="38" cy="100" rx="12" ry="7" fill="#A0782C"/>
+  <ellipse cx="82" cy="100" rx="12" ry="7" fill="#A0782C"/>
+
+  <!-- Paw pads -->
+  <circle cx="34" cy="100" r="2.5" fill="#F5DEB3"/>
+  <circle cx="42" cy="100" r="2.5" fill="#F5DEB3"/>
+  <circle cx="78" cy="100" r="2.5" fill="#F5DEB3"/>
+  <circle cx="86" cy="100" r="2.5" fill="#F5DEB3"/>
+
+  <!-- Tail -->
+  <path d="M95 80 Q110 65 100 50" fill="none" stroke="#A0782C" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Label -->
+  <text x="60" y="116" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="bold" fill="#5D4E37">Ticki</text>
+</svg>
